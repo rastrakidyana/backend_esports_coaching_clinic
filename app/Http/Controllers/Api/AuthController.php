@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Mail\resetPassword;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -133,6 +136,51 @@ class AuthController extends Controller
                 ]);
             }        
         }
+    }
+
+    public function forgetPassword(Request $request) {
+        $data = $request->all();
+
+        $validate = Validator::make($data, [
+            'email' => 'required|email:rfc,dns',            
+        ]);
+
+        if($validate->fails())
+            return response(['message' => $validate->errors()], 400);
+
+        $coach = CoachModel::where('email_coach', '=', $data['email'])->first();
+        $participant = ParticipantModel::where('email_peserta', '=', $data['email'])->first();
+
+        $random = Str::random(5);        
+        
+        if ($coach != null) {
+            $password = $random.'_'.$coach->id;
+            $coach->password = bcrypt($password);
+
+            if($coach->save()){
+                $coach->setAttribute('password_sementara', $password);
+                \Mail::to($data['email'])->send(new \App\Mail\resetPassword($coach));
+                return response([
+                    'message' => 'Atur Ulang Kata Sandi Berhasil, Silahkan Periksa Emailmu',
+                    ],200);
+            }
+        } else if ($participant != null) {
+            $password = $random.'_'.$participant->id;
+            $participant->password = bcrypt($password);
+
+            if($participant->save()){
+                $participant->setAttribute('password_sementara', $password);
+                \Mail::to($data['email'])->send(new \App\Mail\resetPassword($participant));
+                return response([
+                    'message' => 'Atur Ulang Kata Sandi Berhasil, Silahkan Periksa Emailmu',
+                    ],200);
+            }
+        } else {
+            return response([
+                'message' => 'Email Tidak Terdaftar Dalam Sistem',  
+                ],400);
+        }
+
     }
 
     public function logout(Request $request){

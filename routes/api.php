@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('register', 'Api\AuthController@register');
 Route::post('login', 'Api\AuthController@login');
+Route::put('forget_password', 'Api\AuthController@forgetPassword');
 
 Route::group(['middleware' => 'auth:api'],function(){    
     Route::get('coach/get_coach/{id}', 'Api\CoachController@getCoachById');

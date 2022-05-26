@@ -260,7 +260,7 @@ class CoachController extends Controller
             return response(['message' => 'Konfirmasi kata sandi baru dengan kata sandi baru berbeda'],400);
         }
   
-        $coach->password = bcrypt($update_data['new_pass']);       
+        $coach->password = bcrypt($update_data['new_pass']);
  
         if($coach->save()){
             return response([
